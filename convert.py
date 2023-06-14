@@ -534,7 +534,10 @@ def merge_sharded(models: List[LazyModel]) -> LazyModel:
     names = {name: None for model in models for name in model}
 
     def convert(name: str) -> LazyTensor:
-        lazy_tensors: List[LazyTensor] = [model[name] for model in models]
+        lazy_tensors: List[LazyTensor] = []
+        for idx, model in enumerate(models):
+            if name in model:
+                lazy_tensors.append(model[name])
         if len(lazy_tensors) == 1:
             # only one file; don't go through this procedure since there might
             # be quantized tensors
@@ -593,8 +596,10 @@ def permute_lazy(lazy_tensor: LazyTensor, n_head: int) -> LazyTensor:
 
 def convert_transformers_to_orig(model: LazyModel) -> LazyModel:
     out: LazyModel = {}
-    out["tok_embeddings.weight"] = model["model.embed_tokens.weight"]
-    out["norm.weight"] = model["model.norm.weight"]
+    if "model.embed_tokens.weight" in model:
+        out["tok_embeddings.weight"] = model["model.embed_tokens.weight"]
+    if "model.norm.weight" in model:
+        out["norm.weight"] = model["model.norm.weight"]
     out["output.weight"] = model["lm_head.weight"]
 
     n_head = model["model.layers.0.self_attn.q_proj.weight"].shape[1] // 128
@@ -953,12 +958,14 @@ class OutputFile:
         of.fout.close()
 
     @staticmethod
-    def write_all(fname_out: Path, params: Params, model: LazyModel, vocab: Vocab) -> None:
-        check_vocab_size(params, vocab)
+    def write_all(fname_out: Path, params: Params, model: LazyModel, vocab: Vocab=None) -> None:
+        if vocab is not None:
+            check_vocab_size(params, vocab)
         of = OutputFile(fname_out)
         of.write_file_header(params)
-        print("Writing vocab...")
-        of.write_vocab(vocab)
+        if vocab is not None:
+            print("Writing vocab...")
+            of.write_vocab(vocab)
 
         def do_item(item: Tuple[str, LazyTensor]) -> NDArray:
             name, lazy_tensor = item
@@ -1068,6 +1075,8 @@ def load_some_model(path: Path) -> ModelPlus:
         path = files[0]
 
     paths = find_multifile_paths(path)
+    paths = list(set(paths))
+    paths.sort()
     models_plus: List[ModelPlus] = []
     for path in paths:
         print(f"Loading model file {path}")
@@ -1154,6 +1163,7 @@ def main(args_in: Optional[List[str]] = None) -> None:
         else:
             vocab_dir = args.vocab_dir if args.vocab_dir else model_plus.paths[0].parent
             vocab = load_vocab(vocab_dir)
+        # vocab = None
         model = model_plus.model
         model = do_necessary_conversions(model)
         output_type = pick_output_type(model, args.outtype)

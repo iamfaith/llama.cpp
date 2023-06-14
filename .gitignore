@@ -26,6 +26,8 @@ build-sanitize-thread/
 models/*
 *.bin
 
+venv/
+
 /main
 /quantize
 /quantize-stats

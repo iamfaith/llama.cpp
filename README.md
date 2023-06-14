@@ -104,6 +104,9 @@ Here is a typical run using LLaMA-7B:
 
 ```java
 make -j && ./main -m ./models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 512
+
+./main -m /home/faith/llama.cpp/models/ggml-model-q4_0.bin -p "2018年广东理科分数线是多少，这个问题中省份和年份分别是多少，基于json的答案是" -n 128
+
 I llama.cpp build info:
 I UNAME_S:  Darwin
 I UNAME_P:  arm
