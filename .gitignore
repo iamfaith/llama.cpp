@@ -1,5 +1,6 @@
 *.o
 *.a
+*.so
 .DS_Store
 .build/
 .cache/
@@ -19,9 +20,11 @@ build-static/
 build-cublas/
 build-opencl/
 build-metal/
+build-mpi/
 build-no-accel/
 build-sanitize-addr/
 build-sanitize-thread/
+out/
 
 models/*
 *.bin
@@ -34,14 +37,18 @@ venv/
 /result
 /perplexity
 /embedding
+/train-text-from-scratch
+/simple
 /benchmark-matmult
 /vdot
+/server
 /Pipfile
+/embd-input-test
 /libllama.so
-
 build-info.h
 arm_neon.h
 compile_commands.json
+CMakeSettings.json
 
 __pycache__
 
